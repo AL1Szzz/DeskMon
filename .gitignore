@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.log
+*.png.tmp
+DeskMon.settings.json
+DeskMon.settings.json.bak
+render-test.png

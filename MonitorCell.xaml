@@ -1,0 +1,30 @@
+<UserControl x:Class="DeskMon.MonitorCell"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Effect>
+        <!-- soft ambient shadow rather than a hard offset: keeps the text readable on a
+             bright wallpaper without looking like a drop-shadow sticker -->
+        <DropShadowEffect BlurRadius="10" ShadowDepth="0.5" Direction="270"
+                          Opacity="0.45" Color="#FF000000"/>
+    </UserControl.Effect>
+    <Grid VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="9"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Path Grid.Column="0" x:Name="IconPath" Width="21" Height="21" Stretch="Uniform"
+              Stroke="#E6FFFFFF" StrokeThickness="1.5"
+              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+              Fill="{x:Null}" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+            <TextBlock x:Name="LabelText" FontSize="10" FontWeight="Medium"
+                       Foreground="#99FFFFFF" Typography.NumeralAlignment="Tabular"
+                       FontFamily="Segoe UI Variable Small, Segoe UI, Microsoft YaHei UI"/>
+            <TextBlock x:Name="ValueText" FontSize="15.5" FontWeight="SemiBold"
+                       Foreground="#FFFFFFFF" Margin="0,1,0,0"
+                       Typography.NumeralAlignment="Tabular"
+                       FontFamily="Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
