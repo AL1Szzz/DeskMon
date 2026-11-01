@@ -1,0 +1,129 @@
+<Window x:Class="DeskMon.VibranceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="游戏数字震动" Width="500" SizeToContent="Height"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        SnapsToDevicePixels="True" FontFamily="Microsoft YaHei UI"
+        Foreground="{StaticResource Text}" TextOptions.TextFormattingMode="Ideal">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Text}"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource Surface}" CornerRadius="14"
+            BorderBrush="#26FFFFFF" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- custom chrome: no system caption so corners stay rounded -->
+            <Border Grid.Row="0" Padding="18,13,12,11" MouseLeftButtonDown="TitleBar_MouseDown"
+                    Background="Transparent" CornerRadius="14,14,0,0">
+                <Grid>
+                    <TextBlock Text="游戏数字震动" FontSize="14" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Foreground="{StaticResource Text}"/>
+                    <Button Content="✕" Style="{StaticResource IconButton}"
+                            HorizontalAlignment="Right" Click="Close_Click"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Margin="18,0,10,14" Padding="0,0,8,0">
+                <StackPanel>
+
+                    <Border Style="{StaticResource Card}" Margin="0,4,0,10">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtGpu" Text="正在检测显卡…" FontSize="13"/>
+                            <TextBlock x:Name="TxtState" Style="{StaticResource Label}" Margin="0,5,0,0"
+                                       Text="启用后，列表里的游戏进入前台时自动切换数字震动。"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                        <CheckBox x:Name="CkEnabled" Style="{StaticResource Switch}"
+                                  Content="自动切换" Checked="Enabled_Changed" Unchecked="Enabled_Changed"/>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="桌面默认" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtDesktop" Style="{StaticResource ValueText}"
+                                           HorizontalAlignment="Right" Text="50%"/>
+                            </Grid>
+                            <Slider x:Name="SliderDesktop" Style="{StaticResource LevelSlider}"
+                                    Margin="0,8,0,0" ValueChanged="Desktop_Changed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="游戏列表" Style="{StaticResource SectionTitle}" Margin="0,0,0,4"/>
+                            <TextBlock Style="{StaticResource Label}" Margin="0,0,0,8"
+                                       Text="按进程名匹配，进入前台即生效，切走即还原。"/>
+
+                            <TextBlock x:Name="TxtEmpty" Style="{StaticResource Label}" Margin="0,2,0,8"
+                                       Text="还没有添加游戏。" Visibility="Collapsed"/>
+
+                            <ItemsControl x:Name="GameList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource CardHover}" CornerRadius="9"
+                                                Padding="13,10" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Process}"
+                                                           Foreground="{StaticResource Text}" FontSize="13"
+                                                           VerticalAlignment="Center" Width="104"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Process}"/>
+                                                <Slider Grid.Column="1" Style="{StaticResource LevelSlider}"
+                                                        Margin="6,0,10,0" Value="{Binding Level, Mode=TwoWay}"/>
+                                                <TextBlock Grid.Column="2" VerticalAlignment="Center"
+                                                           Text="{Binding Level, StringFormat={}{0}%}"
+                                                           Style="{StaticResource ValueText}"
+                                                           Width="44" TextAlignment="Right" FontSize="12.5"
+                                                           Margin="0,0,6,0"/>
+                                                <Button Grid.Column="3" Content="移除"
+                                                        Style="{StaticResource GhostButton}"
+                                                        Padding="10,5" FontSize="11.5"
+                                                        Tag="{Binding}" Click="Remove_Click"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="ComboProcesses" Grid.Column="0" Style="{StaticResource Combo}"
+                                          Margin="0,0,8,0" Tag="选择或输入进程名…"
+                                          ToolTip="选择正在运行的进程，或直接输入进程名"/>
+                                <Button Grid.Column="1" Content="添加" Style="{StaticResource AccentButton}"
+                                        Click="Add_Click"/>
+                            </Grid>
+
+                            <Button x:Name="BtnBrowse" Content="从文件选择程序…" Style="{StaticResource GhostButton}"
+                                    Margin="0,8,0,0" Click="Browse_Click"/>
+                            <Button x:Name="BtnImport" Content="从 vibranceGUI 导入" Style="{StaticResource GhostButton}"
+                                    Margin="0,8,0,0" Click="Import_Click"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

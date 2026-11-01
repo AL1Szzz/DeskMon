@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace DeskMon
 {
@@ -70,5 +71,12 @@ namespace DeskMon
         }
 
         private void Done_Click(object sender, RoutedEventArgs e) => Close();
+
+        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left) DragMove();
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

@@ -54,6 +54,35 @@ namespace DeskMon
                 return;
             }
 
+            // smoke test: build both dialogs against the real App resources so a
+            // broken theme reference fails loudly here instead of on a user click.
+            if (e.Args.Length > 0 && e.Args[0] == "--dialog-test")
+            {
+                try
+                {
+                    var probe = Settings.Load();
+                    var vibrance = new VibranceWindow(probe, null);
+                    vibrance.Show();
+                    var options = new SettingsWindow(probe);
+                    options.Show();
+                    var close = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+                    close.Tick += (s2, e2) =>
+                    {
+                        close.Stop();
+                        vibrance.Close();
+                        options.Close();
+                        Shutdown(0);
+                    };
+                    close.Start();
+                }
+                catch (Exception ex)
+                {
+                    LogError("dialog-test", ex);
+                    Shutdown(1);
+                }
+                return;
+            }
+
             bool created;
             _singleInstance = new Mutex(true, "DeskMon_SingleInstance", out created);
             _ownsMutex = created;
@@ -102,6 +131,15 @@ namespace DeskMon
             _sensors.Updated += QueueSample;
             BuildTray();
             _sensors.Start(); // Hardware discovery runs on the worker, not the UI thread.
+
+            // The NVAPI session opens after the widget is on screen; a machine without
+            // NVIDIA just leaves the service unavailable and the menu explains why.
+            try
+            {
+                _vibrance = new VibranceService(_settings);
+                _vibrance.Start();
+            }
+            catch (Exception ex) { LogError("vibrance", ex); }
         }
 
         private void QueueSample(Sample sample)
@@ -137,6 +175,8 @@ namespace DeskMon
         }
 
         private SettingsWindow _settingsWindow;
+        private VibranceService _vibrance;
+        private VibranceWindow _vibranceWindow;
 
         private void OpenSettingsWindow()
         {
@@ -149,6 +189,20 @@ namespace DeskMon
             else
             {
                 _settingsWindow.Activate();
+            }
+        }
+
+        private void OpenVibranceWindow()
+        {
+            if (_vibranceWindow == null)
+            {
+                _vibranceWindow = new VibranceWindow(_settings, _vibrance);
+                _vibranceWindow.Closed += (s, e) => _vibranceWindow = null;
+                _vibranceWindow.Show();
+            }
+            else
+            {
+                _vibranceWindow.Activate();
             }
         }
 
@@ -174,6 +228,9 @@ namespace DeskMon
             var miOptions = new ToolStripMenuItem("显示选项…");
             miOptions.Click += (s, e) => OpenSettingsWindow();
 
+            var miVibrance = new ToolStripMenuItem("游戏数字震动…");
+            miVibrance.Click += (s, e) => OpenVibranceWindow();
+
             var miExit = new ToolStripMenuItem("退出");
             miExit.Click += (s, e) => ExitApp();
 
@@ -182,6 +239,7 @@ namespace DeskMon
             menu.Items.Add(_miLock);
             menu.Items.Add(_miAutoStart);
             menu.Items.Add(miOptions);
+            menu.Items.Add(miVibrance);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(miExit);
             _tray.ContextMenuStrip = menu;
@@ -320,6 +378,8 @@ namespace DeskMon
             _exiting = true;
             _pinTimer?.Stop();
             if (_sensors != null) _sensors.Updated -= QueueSample;
+            // Leaving a game in the middle of a session must not strand the colours.
+            try { _vibrance?.Dispose(); } catch { }
             try { _sensors?.Dispose(); } catch { }
             try
             {
